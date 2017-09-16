@@ -94,7 +94,8 @@ class Overlap:
         (b, e) = (e, e + path.tlen)
         path.trace = struct.unpack("{}b".format(path.tlen), s[off+b:off+e])
         self.path = path
-
+        print(path.trace)
+        print()
         return e
 
     def pack(self):
@@ -170,8 +171,6 @@ class LasFileIterator(object):
 
 if __name__ == "__main__":
     ##merge_sorted_las_file("pt.las", ["raw_reads.raw_reads.N1.las", "raw_reads.raw_reads.N2.las"]);
-    for s in LasFile("preads.preads.las", DBFile("raw_reads")):
-        print (s)
-
+    load_las_file(r"data/a.b.S.las")
 
         
