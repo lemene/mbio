@@ -330,13 +330,13 @@ def rd_pacbio_head():
 
         ofile = open(ofname, "w")
         for line in open(ifname):
-        if line[0] == '>':
-            its = line.split()
-            its[0] = its[0]+"/0/0_1"
-            line_new = " ".join(its)
-            ofile.write("%s\n" % line_new)
-        else:
-            ofile.write(line)
+            if line[0] == '>':
+                its = line.split()
+                its[0] = its[0]+"/0/0_1"
+                line_new = " ".join(its)
+                ofile.write("%s\n" % line_new)
+            else:
+                ofile.write(line)
 
     except:
         import traceback
