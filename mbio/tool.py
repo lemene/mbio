@@ -20,3 +20,6 @@ def run(cmd, reqsucc=True):
     r = os.system(cmd)
     if reqsucc: assert r == 0
 
+
+def newer(f0, f1):
+    return not os.path.lexists(f1) or os.path.getmtime(f0) > os.path.getmtime(f1)

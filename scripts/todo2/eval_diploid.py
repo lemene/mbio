@@ -58,11 +58,16 @@ def count_ref_kmer(klen, refs):
     
 def load_kmers(fname):
     '''load xxx.tsv file'''
+    import pickle
    
-    kmers = set()
-    for line in open(fname):
-        kmers.add(line.split()[0])
-
+    if file_newer(fname, fname+".pickle"):
+        kmers = set()
+        for line in open(fname):
+            kmers.add(line.split()[0])
+        pickle.dump(kmers, open(fname+".pickle", "wb"))
+    else:
+        print("pickle")
+        kmers = pickle.load(open(fname+".pickle", "rb"))
     return kmers
 
 
@@ -82,6 +87,7 @@ def stat_read_kmer_worker(inputs, ouputs, kmers, k):
         count = [r.name, 0, 0, 0, 0]
         for i in range(len(r.seq)-k+1):
             kmer = r.seq[i:i+k]
+            if "N" in kmer or "n" in kmer: continue
             vkmer = rv(kmer)
             if kmer in kmers[0] or vkmer in kmers[0]:
                 count[1] += 1
@@ -115,18 +121,23 @@ def stat_read_kmer(fname, kmers, k, nproc):
     
     ## product
     fobj = gzip.open(fname, "rt") if fname.endswith('.gz') else open(fname);
-    njob, reads = 0, []
+    njob, reads, size = 0, [], 0
     for i, r in enumerate(SeqIO.parse(fobj, "fasta")):
         reads.append(r)
-        if len(reads) >= 1000:
+        size += len(r.seq)
+        if size >= 4*1000*1000:
+            print("size", size)
             inputs.put(reads)
             njob += 1
             reads = []
+            size = 0
     
     if len(reads) > 0:
         inputs.put(reads)
+        print("size", size)
         njob += 1
         reads = []
+        size = 0
 
     [inputs.put(None) for i in range(nproc)]
 
@@ -134,7 +145,7 @@ def stat_read_kmer(fname, kmers, k, nproc):
 
     result = []
     for i in range(njob):
-        result += outputs.get()
+        result += outputs.get() 
 
     return result
 
@@ -156,13 +167,17 @@ def edi_build():
 
         _, name, ext = split_fname(reads)
         result_fname = "result_" + name
-        ofiles = count_ref_kmer(k, refs)
+
+        if refs[0].endswith(".tsv"):
+            ofiles = refs
+        else:
+            ofiles = count_ref_kmer(k, refs)
 
         if file_newer(ofiles+[reads], result_fname):
             fkmer, mkmer, ckmer = load_parent_kmers(ofiles[0], ofiles[1])
             print(len(fkmer), len(mkmer), len(ckmer))
         
-            result = stat_read_kmer(reads, [fkmer, mkmer, ckmer], k, 40)
+            result = stat_read_kmer(reads, [fkmer, mkmer, ckmer], k, 20)
             save_analyze_result(result, result_fname)       
 
         print(result_fname) 
@@ -182,6 +197,7 @@ def edi_result():
         for line in open(rfname):
             its = line.split()
             kc = [int(i) for i in its[1:]]  # col cvi coomon abnormal 
+            #if (kc[3] * 3 >= kc[2]): continue
 
             err[0] += min(kc[0], kc[1])
             err[1] += max(kc[0], kc[1])

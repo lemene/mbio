@@ -1,7 +1,7 @@
 # 提取部分reads，计算它的正确率
 #
 mbio=~/work/mbio
-ref=../../data/reference.fna
+ref=./ref.fna
 #org_reads=../ecoli/1-correct/0/corrected_reads_0.fasta
 
 tempdir=tempdir
@@ -19,7 +19,7 @@ mkdir -p $tempdir result
 
 # sample
 if [ $org_reads -nt $reads ]; then
-   python3 $mbio/script/read.py rd_sample random $org_reads $reads 100000000
+   python3 $mbio/scripts/read.py rd_sample random $org_reads $reads 100000000
 fi
 
 
@@ -29,7 +29,7 @@ if [ $reads -nt $overlaps ]; then
 fi
 
 if [ $overlaps -nt $result ]; then
-   python3 $mbio/script/paffile.py paf_accuracy $overlaps 2>&1 | tee $result
+   python3 $mbio/scripts/paffile.py paf_accuracy $overlaps 2>&1 | tee $result
 else
    cat $result
 fi

@@ -21,7 +21,7 @@ if [ $ref2 -nt $outdir/$name2.tsv ]; then
 fi
 
 
-python3 ~/work/mbio/script/eval_diploid.py edi_build $ref1
+python3 ~/work/mbio/scripts/eval_diploid.py edi_build $ref1
 ~
 ~
 ~

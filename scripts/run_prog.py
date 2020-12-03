@@ -2,6 +2,7 @@
 
 import sys, os
 import traceback
+import argparse
 
 prjdir = os.path.sep.join([os.path.dirname(os.path.abspath(__file__)), ".."])
 sys.path.append(prjdir)
@@ -133,7 +134,7 @@ def rp_racon(argv):
         cmd = "racon %s -t %d %s %s %s > %s" % (racon_options, threads, reads, rd2ctg, contigs, polished)
         tl.run_if_modified([reads, contigs, rd2ctg], [polished], cmd)
 
-        tl.run("rm -f " + rd2ctg)
+        #tl.run("rm -f " + rd2ctg)
 
     except:
         traceback.print_exc()
@@ -157,9 +158,14 @@ def rp_pbsim():
 #mummerplot out.best.delta --fat -f -png
 def rp_mummerplot(argv):
 
+    parser = argparse.ArgumentParser()
+    parser.add_argument("reference", type=str)
+    parser.add_argument("contigs", type=str)
+
     try:
-        contigs = argv[0]
-        refs = argv[1]
+        args = parser.parse_args(argv)
+        contigs = args.contigs
+        refs = args.reference
 
         cmd = f"nucmer  -l 100 -c 1000 -d 10 --banded -D 5 {contigs} {refs}"
         tl.run_if_modified([], [], cmd)
@@ -179,6 +185,55 @@ def rp_mummerplot(argv):
         traceback.print_exc()
         print("----------------")
         print(rp_racon.__doc__)
+
+def rp_purge_dups(argv):
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("reads", type=str)
+    parser.add_argument("contigs", type=str)
+    parser.add_argument("--threads", type=int, default=20)
+
+    try:
+        args = parser.parse_args(argv)
+        contigs = args.contigs
+        reads = args.reads
+        threads = args.threads
+
+        #cmd = f"minimap2 -xmap-pb {contigs} {reads} | gzip -c - > rd2ctg.paf.gz"
+        cmd = "minimap2 -x map-pb -t %d %s %s | gzip -c - > rd2ctg.paf.gz" % (threads, contigs, reads)
+        tl.run_if_modified([contigs, reads], ["rd2ctg.paf.gz"], cmd)
+
+        cmd = "pbcstat rd2ctg.paf.gz"
+        tl.run_if_modified(["rd2ctg.paf.gz"], ["PB.base.cov", "PB.stat"], cmd)
+
+        cmd = "calcuts PB.stat > cutoffs 2>calcults.log"
+        tl.run_if_modified(["PB.stat"], ["cutoffs"], cmd)
+
+        _, name = os.path.split(contigs)
+        split_contigs = name + ".split"
+
+        #cmd = f"split_fa {contigs} > {split_contigs}"
+        cmd = "split_fa %s > %s" % (contigs , split_contigs)
+        tl.run_if_modified([contigs], [split_contigs], cmd)
+
+        #cmd = f"minimap2 -xasm5 -DP {split_contigs} {split_contigs} | gzip -c - > ctg2ctg.paf.gz"
+        cmd = "minimap2 -x asm20 -DP -t %d %s %s | gzip -c - > ctg2ctg.paf.gz" % (threads, split_contigs, split_contigs)
+        tl.run_if_modified([split_contigs], ["ctg2ctg.paf.gz"], cmd)
+
+        cmd = "purge_dups -2 -T cutoffs -c PB.base.cov ctg2ctg.paf.gz > dups.bed 2> purge_dups.log"
+        tl.run_if_modified(["PB.base.cov", "ctg2ctg.paf.gz", "cutoffs"], ["dups.bed"], cmd)
+
+        #cmd = f"get_seqs dups.bed {contigs}"
+        cmd = "get_seqs dups.bed %s" % contigs
+        tl.run_if_modified(["dups.bed", contigs], ["purged.fa"], cmd)
+        
+        #tl.run("rm -f ")
+
+    except:
+        pass
+        #traceback.print_exc()
+        #print("----------------")
+        #print(parser.usage)
 
 if __name__ == '__main__':
     if len(sys.argv) > 1:

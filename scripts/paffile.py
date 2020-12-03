@@ -85,8 +85,13 @@ def stat_file(fname, N):
     #reads, coverage = stat_lines(open(ifname).readlines())
 
     lines = open(fname).readlines();
-    block = (len(lines) + N - 1) // N;
 
+    if len(lines) < N:
+        N = 1
+        block = len(lines)
+    else:
+        block = (len(lines) + N - 1) // N;
+    print(N, block)
     p = multiprocessing.Pool(processes=N)
     result = [p.apply_async(stat_lines, args=(lines[i*block:(i+1)*block],)) for i in range(N)]
 
@@ -188,10 +193,10 @@ def paf_test():
         print(paf_accuracy.__doc__)
 
 
-def paf_accuracy():
+def paf_accuracy(argv):
     try:
-        ifname = sys.argv[2]
-        N = 10  if len(sys.argv) < 4 else int(sys.argv[3])
+        ifname = argv[0]
+        N = 10  if len(argv) < 2 else int(argv[1])
 
         reads, coverage = stat_file(ifname, N)
         print(len(coverage))
@@ -202,10 +207,10 @@ def paf_accuracy():
         traceback.print_exc()
         print(paf_accuracy.__doc__)
 
-def paf_detail_accuracy():
+def paf_detail_accuracy(argv):
     try:
-        ifname = sys.argv[2]
-        N = 10  if len(sys.argv) < 4 else int(sys.argv[3])
+        ifname = argv[0]
+        N = 10  if len(argv) < 2 else int(argv[1])
 
         reads, coverage = stat_file(ifname, N)
         print(len(coverage))
@@ -296,12 +301,12 @@ def paf_readnames():
         traceback.print_exc()
         print(paf_readnames.__doc__)
 
-def paf_coverage():
+def paf_coverage(argv):
     '''获取overlaps的reads名称'''
     try:
-        ifname = sys.argv[2]
-        name = sys.argv[3]
-        stub = 0 if len(sys.argv) < 5 else int(sys.argv[4])
+        ifname = argv[0]
+        name = argv[1]
+        stub = 0 if len(argv) < 3 else int(argv[2])
 
         ranges = []
 
@@ -396,10 +401,54 @@ def paf_center():
         traceback.print_exc()
         print(paf_coverage.__doc__)
 
+def paf_stat_cigar(argv):
+    try:
+        fname = argv[0]
+
+        for line in open(fname):
+            its = line.split()
+
+            for i in its[12:]:
+                if i.startswith("cg:Z:"):
+                    cigar = i[5:]
+                    toff, qoff = (0, 0)
+                    distance = 0;
+                    tprint = 0
+                    for m in CIGAR_PATTERN.finditer(cigar):
+                        n, p = int(m.group(1)), m.group(2)
+
+                        if p == "=":
+                            toff += n
+
+                        elif p == "X":
+                            distance += n
+
+                            toff += n
+
+                        elif p == 'I':
+                            distance += n
+                        elif p == 'D':
+                            distance += n
+                            toff += n
+
+                        else:   # p in 'SHM':
+                            assert False, "不支持cigar的%s" % p
+
+                        if toff - tprint >= 500:
+                            print("[%d,%d], %d, %d, %f" % (tprint, toff, toff-tprint, distance, distance / (toff-tprint)))
+                            tprint=toff
+                            distance = 0
+
+    except:
+        import traceback
+        traceback.print_exc()
+        print(paf_coverage.__doc__)
+
+
 if __name__ == '__main__':
     import sys
     if len(sys.argv) > 1:
-       locals()[sys.argv[1]]()
+       locals()[sys.argv[1]](sys.argv[2:])
     else:
        for func in list(locals().keys()):
            if func.startswith("paf_"):

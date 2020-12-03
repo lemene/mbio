@@ -100,7 +100,7 @@ def ncbi_download_baxh5():
 
         
         logger.info("Start running download.sh")
-        os.system("bash download.sh")
+        #os.system("bash download.sh")
 
         logger.info("End downloading baxh5")
 

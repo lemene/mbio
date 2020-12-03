@@ -21,7 +21,7 @@ mkdir -p $tempdir result
 
 # sample
 if [ $org_reads -nt $reads ]; then
-   python3 $mbio/script/read.py rd_sample random $org_reads $reads 100000000
+   python3 $mbio/scripts/read.py rd_sample random $org_reads $reads 100000000
 fi
 
 

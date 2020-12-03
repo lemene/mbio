@@ -1,0 +1,3 @@
+
+mkdir ecoli
+cd ecoli && ~/tool/wtdbg2/wtdbg2.pl -t 40 -g 4.6m -P -o ecoli ../../data/rawreads.fastq && cd -

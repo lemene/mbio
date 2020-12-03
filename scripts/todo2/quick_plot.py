@@ -13,10 +13,12 @@ def qp_line():
         fname = sys.argv[2]
         col = int(sys.argv[3])
         data = []
-        for line in open(fname):
+        y = []
+        for i, line in enumerate(open(fname)):
             data.append(float(line.split()[col]))
-
-        plt.plot(data)
+            #y.append(i*0.01 - 1)
+            y.append(i)
+        plt.plot(y, data)
         plt.show()
     except:
         traceback.print_exc()
@@ -29,7 +31,7 @@ def load_column(fname, col):
     return data
 
 def show_hist(values):
-    plt.hist(values, 200)
+    plt.hist(values, 2000)
     # plt.xlabel("Minimum coverage")
     # plt.ylabel("Count")
     plt.show()

@@ -38,6 +38,25 @@ def misc_kbm2paf(argv):
         print(misc_kbm2paf.__doc__)
 
 
+def misc_params(argv):
+    '''一些有用的参数组合'''
+
+    try:
+        params = {
+            "quast-large": "--min-contig 5000 --large --min-identity 90",
+            "quast-large-fragment": "--min-contig 5000 --large --min-identity 90 --fragmented"
+        }
+        if len(argv) == 0:
+            print(params)
+        else:
+            print(params[argv[0]])
+
+
+    except:
+        traceback.print_exc()
+        print("----------------")
+        print(misc_params.__doc__)
+
         
 if __name__ == '__main__':
     if len(sys.argv) > 1:
