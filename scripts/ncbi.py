@@ -1,6 +1,7 @@
 import sys, os
 import urllib.request, re
 import logging
+import argparse
 
 def get_srrlist_from_sxr(sxr):
     url = "https://www.ncbi.nlm.nih.gov/sra/"
@@ -79,31 +80,44 @@ def ncbi_download_sra():
         print("----------------")
         print(ncbi_download_sra.__doc__)
 
-def ncbi_download_baxh5():
+def ncbi_download_baxh5(argv):
     '''根据数据的SXR号，下载对应的bax.h5文件
-    ncbi_download_baxh5 sxr
 '''
+    parser = argparse.ArgumentParser("下载baxh5")
+    parser.add_argument("--srr", type=str, default="")
+    parser.add_argument("--srrlist", type=str, default="")
+    parser.add_argument("--dlcmds", type=str, default="dl-baxh5.sh")
+    parser.add_argument("--failed", type=str, default="failed")
     try:
-
-        srx = sys.argv[2]
-
         logging.basicConfig(level=logging.INFO)
         logger = logging.getLogger("baxh5")
 
-        logger.info("Get SRR from " + srx)
-        srrlist = get_srrlist_from_sxr(srx)
-        save_list("srrlist", srrlist)
+        args = parser.parse_args(argv)
+        srr = args.srr
+        srrlist = args.srrlist
+        dlcmds = args.dlcmds
+        failed = args.failed
 
-        logger.info("Get baxh5 from " + str(srrlist))
-        baxh5 = [[srr, get_baxh5_from_srr(srr)] for srr in srrlist]
-        save_baxh5_download_file("download.sh", baxh5)
+        assert(srr == "" and srrlist != "" or srr != "" and srrlist == "")
 
+        srrs = [srr] if srr != "" else [i.strip() for i in open(srrlist)]
+        logger.info("srr size = %d" % len(srrs))
+
+        logger.info("get baxh5")
+        baxh5 = [[s, get_baxh5_from_srr(s)] for s in srrs]
         
-        logger.info("Start running download.sh")
-        #os.system("bash download.sh")
+        failed_srrs = []
+        logger.info("check baxh5")
+        for k, v in baxh5:
+            if len(v) != 4:
+                failed_srrs.append(k)
 
-        logger.info("End downloading baxh5")
+        save_baxh5_download_file(dlcmds, baxh5)
 
+        with open(failed, "w") as f:
+            for i in failed_srrs:
+                f.write("%s\n" % i)
+        
     except:
         import traceback
         traceback.print_exc()
@@ -112,7 +126,7 @@ def ncbi_download_baxh5():
 
 if __name__ == '__main__':
     if len(sys.argv) > 1:
-       locals()[sys.argv[1]]()
+       locals()[sys.argv[1]](sys.argv[2:])
     else:
        for func in list(locals().keys()):
            if func.startswith("ncbi_"):
