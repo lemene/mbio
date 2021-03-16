@@ -31,7 +31,7 @@ def load_column(fname, col):
     return data
 
 def show_hist(values):
-    plt.hist(values, 2000)
+    plt.hist(values, 100)
     # plt.xlabel("Minimum coverage")
     # plt.ylabel("Count")
     plt.show()

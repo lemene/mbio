@@ -3,6 +3,8 @@
 import sys, os
 import traceback
 import argparse
+import glob
+import multiprocessing as mp
 
 prjdir = os.path.sep.join([os.path.dirname(os.path.abspath(__file__)), ".."])
 sys.path.append(prjdir)
@@ -101,9 +103,27 @@ def rp_miniasm(argv):
 
 
 
+def extract(f):
+    fo = f.replace(".", "_")
+    #cmd = '''dextract -o%s.fasta -e"ln>=500" %s''' % (fo, f)
+    cmd = '''pls2fasta -fastq %s %s.fastq -minSubreadLength 2000 -minReadScore 750 -trimByRegion''' % (f, f)
+    print(cmd)
+    os.system(cmd)
+
 def rp_bax2fasta(argv):
 
     # enter the folder that contain *.bax.h5, and run bax2fasta.sh
+    try:
+        files = argv[0]
+ 
+
+        with mp.Pool(10) as p:
+            p.map(extract, glob.glob(files))
+    
+    except:
+        traceback.print_exc()
+        print("----------------")
+        print(rp_bax2fasta.__doc__)
     '''
 idx=1
 for file in `echo *.bax.h5`
@@ -111,6 +131,7 @@ do
   dextract -orawreads${idx}.fasta -e"ln>=1000" $file
   idx=`expr $idx + 1`
 done
+
 '''
 
 def rp_racon(argv):
