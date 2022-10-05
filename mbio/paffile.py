@@ -6,6 +6,8 @@ import threading
 import queue
 import multiprocessing
 
+
+import utils as utils
 CIGAR_PATTERN = re.compile(r"(\d+)([MIDNSHP=X])")
 
 def is_paf_ok(its, max_oh):
@@ -447,12 +449,6 @@ def paf_stat_cigar(argv):
         traceback.print_exc()
         print(paf_coverage.__doc__)
 
-
 if __name__ == '__main__':
-    import sys
-    if len(sys.argv) > 1:
-       locals()[sys.argv[1]](sys.argv[2:])
-    else:
-       for func in list(locals().keys()):
-           if func.startswith("paf_"):
-               print(func)
+    utils.script_entry(sys.argv, locals(), "paf_")
+

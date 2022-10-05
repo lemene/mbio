@@ -99,57 +99,29 @@ def filter_sam(ifname, ofname, filterfunc=lambda x: True):
 class CigarIter(object):
     def __init__(self, cigar):
         self.inner_iter = CIGAR_RE.finditer(cigar)
-        self.reflen, self.inlen, self.dellen = 0, 0, 0, 0
-        self.clips = [0, 0, 0, 0]
-        self.state = 0
+        self.ref = 0
+        self.query = 0
 
     def __iter__(self): return self
 
     def __next__(self):
         for m in self.inner_iter:
             n, t = int(m.group(1)), m.group(2)
-            reflen, inlen, dellen, clips, state = self.reflen, self.inlen, self.dellen, trupe(self.clips), self.state
+            ref, query = self.ref, self.query
 
-            if t == 'H':
-                if self.state == 0:
-                    self.clips[0] = n
-                    self.state = 1
-                elif self.state == 2 or self.state == 3:
-                    self.clips[3] = n
-                    self.state = 4
-                else:
-                    assert False, "cigar，%s出现的位置与假定不符" % t
-
-            elif t == 'S':
-                if self.state == 0 or self.state == 1:
-                    self.clips[1] = n
-                    self.state = 2
-                elif self.state == 2:
-                    self.clips[2] = n
-                    self.state = 3
-                else:
-                    assert False, "cigar，%s出现的位置与假定不符" % t
+            if t in "HS":
+                self.query += n
+            elif t in "M=X":
+                self.ref += n
+                self.query += n
+            elif t == 'I':
+                self.query += n
+            elif t == 'D':
+                self.ref += n
             else:
-                if self.state == 0 or self.state == 1:
-                    self.state = 2
-                elif self.state == 2:
-                    pass    # 合法状态，不需要处理
-                else:
-                    assert False, "cigar，%s出现的位置与假定不符" % t
+                assert False, "bad type:%s" % t
 
-                if t in "M=X":
-                    self.reflen += n
-                elif t == 'I':
-                    self.inlen += n
-                elif t == 'D':
-                    self.reflen += n
-                    self.dellen += n
-                else:
-                    assert False, "cigar，未能识别字符：%s" % t
-
-        
-
-            return t, m, (reflen, inlen, dellen), clips, state
+            return t, n, query, ref
 
         else:
             raise StopIteration

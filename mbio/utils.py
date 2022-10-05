@@ -23,3 +23,14 @@ def run(cmd, reqsucc=True):
 
 def newer(f0, f1):
     return not os.path.lexists(f1) or os.path.getmtime(f0) > os.path.getmtime(f1)
+
+def script_entry(argv, locals, prefix):
+    
+    if len(argv) > 1:
+        locals[argv[1]](argv[2:])
+    else:
+        maxlen = max([len(func) for func in list(locals.keys())])
+        for func in sorted(list(locals.keys())):
+            if func.startswith(prefix):
+                doc = locals[func].__doc__
+                print("%s%s: %s" % (func, " "*(maxlen-len(func)), doc.split("\n")[0] if doc != None else ""))
