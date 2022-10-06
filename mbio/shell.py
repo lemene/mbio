@@ -1,6 +1,11 @@
 #!/usr/bin/python3
 import sys,os
 import traceback
+import argparse
+import glob
+
+import utils
+import logger
 
 
 def awk_ol_m4():
@@ -190,15 +195,32 @@ def sh_awk_mean():
     except:
         traceback.print_exc()
         print("----------------")
-        print(sk_awk_mean.__doc__);
+        print(sh_awk_mean.__doc__);
 
 
+def sh_grep_overlap_by_name(argv):
+    parser = argparse.ArgumentParser("使用grep命令找出overlaps包含的名字")
+    parser.add_argument("overlaps", type=str)
+    parser.add_argument("reads0", type=str)
+    parser.add_argument("reads1", type=str, default="")
 
+    try:
+        args = parser.parse_args(argv)
+        
+        for f in glob.glob(args.overlaps):
+            logger.logger.info(f)
+            grep = 'zgrep' if f.endswith('.gz') else 'grep'
 
-if __name__ == "__main__":
-    if len(sys.argv) > 1:
-       locals()[sys.argv[1]]()
-    else:
-       for func in list(locals().keys()):
-           if func.startswith("sh_"):
-               print(func)
+            reads0 = '\|'.join(args.reads0.split(','))
+            reads1 = '' if args.reads1 == "" else '\|'.join(args.reads1.split(','))
+            cmd = '%s -w "%s" %s | grep -w "%s"' % (grep, reads0, f, reads1)
+            logger.logger.info(cmd)
+            os.system(cmd)
+
+    except:
+        traceback.print_exc()
+        print("-----------------")
+        parser.print_usage()
+
+if __name__ == '__main__':
+    utils.script_entry(sys.argv, locals(), "sh_")
