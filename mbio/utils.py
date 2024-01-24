@@ -1,5 +1,7 @@
 import os
 
+from logger import * 
+
 def run_if_modified(ifiles, ofiles, cmd, force=False, reqsucc=True):
     '''如果ofiles修改时间落后ifiles，则运行func'''
 
@@ -13,6 +15,7 @@ def run_if_modified(ifiles, ofiles, cmd, force=False, reqsucc=True):
     otimes = [os.path.getmtime(f) if os.path.lexists(f) else 0 for f in _ofiles]
 
     if len(otimes) == 0 or max(itimes) > min(otimes) or force:
+        logger.info("run: %s", cmd)
         r = os.system(cmd)
         if reqsucc: assert r == 0
 
