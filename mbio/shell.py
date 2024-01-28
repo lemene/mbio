@@ -146,38 +146,6 @@ def grep_ol_0():
     os.system(cmd)
 
 
-def usage(f, msg):
-    print("Usage: %s %s %s" % (sys.argv[0], f.__name__, msg))
-
-def wrap_grep_or():
-    if len(sys.argv) == 4:
-       fname = sys.argv[2]
-       substrs = sys.argv[3]
-       
-       subs = substrs.split(",")
-       pattern="\|".join(["\<"+i+"\>" for i in subs])
-       cmd = "".join(["grep \"", pattern, "\" ", fname])
-       print(cmd)
-       os.system(cmd)
-    
-    else:
-        usage(wrap_grep_or, "fname subs(xxx,yyy,...)")
-
-
-def wrap_zgrep_or():
-    if len(sys.argv) == 4:
-       fname = sys.argv[2]
-       substrs = sys.argv[3]
-       
-       subs = substrs.split(",")
-       pattern="\|".join(["\<"+i+"\>" for i in subs])
-       cmd = "".join(["zgrep \"", pattern, "\" ", fname])
-       print(cmd)
-       os.system(cmd)
-    
-    else:
-        usage(wrap_grep_or, "fname subs(xxx,yyy,...)")
-
 
 def sh_awk_mean():
     '''统计某列的平均值

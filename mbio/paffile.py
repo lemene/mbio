@@ -2,9 +2,8 @@
 
 import sys,os
 import re
-import threading
-import queue
 import multiprocessing
+import argparse
 
 
 import utils as utils
@@ -448,6 +447,52 @@ def paf_stat_cigar(argv):
         import traceback
         traceback.print_exc()
         print(paf_coverage.__doc__)
+
+
+def paf_find_snp(argv):
+    '''将两个单倍型片段(父母本的ref片段)对比对到reads上, 找出reads上可能的SNP位置'''
+    
+    parser = argparse.ArgumentParser(paf_find_snp.__doc__)
+    parser.add_argument("paffile", type=str)
+    try:
+        args = parser.parse_args(argv)
+
+        positions = [{}, {}]
+        for i, line in enumerate(open(args.paffile)):
+            its = line.split()
+            toff = int(its[7])
+
+            for msg in its[12:]:
+                if msg.startswith("cg:Z:"):
+                    cigar = msg[5:]
+                    for m in CIGAR_PATTERN.finditer(cigar):
+                        n, p = int(m.group(1)), m.group(2)
+
+                        if p == '=' or p == 'X':
+                            for ip in range(n):
+                                positions[i][toff+ip] = p
+                            toff += n
+                        elif p == 'I':
+                            pass
+                        elif p == 'D':
+                            toff += n
+
+                        else:   # p in 'SHM':
+                            assert False, "不支持cigar的%s" % p
+            if i == 1: break
+
+        assert len(positions[0]) > 0 and len(positions[1]) > 0
+
+        for k, v in positions[0].items():
+            if k in positions[1] and v != positions[1][k]:
+                print(k)
+
+        
+    except:
+        import traceback
+        traceback.print_exc()
+        print("----------------")
+        print(paf_find_snp.__doc__)
 
 if __name__ == '__main__':
     utils.script_entry(sys.argv, locals(), "paf_")

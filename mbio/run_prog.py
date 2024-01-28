@@ -1,5 +1,6 @@
 #! /usr/bin/env python3
 
+from pydoc import describe
 import sys, os
 import traceback
 import argparse
@@ -8,13 +9,19 @@ import multiprocessing as mp
 from collections import defaultdict
 import logging
 
+import utils
+import logger
+
+mydir, _ = os.path.split(__file__)
+
 prjdir = os.path.sep.join([os.path.dirname(os.path.abspath(__file__)), ".."])
 sys.path.append(prjdir)
 
-import mbio.tool as tl
+
+import utils as tl
 
 def rp_sam4igv(argv):
-    '''将sam文件处理成igv可显示的格式，生成xxx.sorted.bam xxx.sorted.bam.bai
+    '''将sam文件处理成igv可显示的格式, 生成xxx.sorted.bam xxx.sorted.bam.bai
 '''
     parser = argparse.ArgumentParser(rp_sam4igv.__doc__)
     parser.add_argument("sam", type=str)
@@ -28,7 +35,7 @@ def rp_sam4igv(argv):
         samfname = args.sam
         if args.filter:
             samfname = args.sam.replace(".sam", ".flt.sam")
-            cmd = "python3 %s/scripts/todo2/samfile.py sam_filter_overhang %s %s" % (prjdir, args.sam, samfname)
+            cmd = "python3 %s/samfile.py sam_filter_overhang %s %s" % (mydir, args.sam, samfname)
             tl.run_if_modified(args.sam, samfname, cmd)
 
 
@@ -298,10 +305,43 @@ def rp_purge_dups(argv):
         #print("----------------")
         #print(parser.usage)
 
+def rp_eval_reads(argv):
+    '''evaluate reads accuracy'''
+    parser = argparse.ArgumentParser(rp_eval_reads.__doc__)
+    parser.add_argument("reads", type=str)
+    parser.add_argument("reference", type=str)
+    parser.add_argument("--base_size", type=str, default="0")
+    parser.add_argument("--wrkdir", type=str, default="./wrkdir")
+    parser.add_argument("--subreads", type=str, default="")
+    parser.add_argument("--threads", type=int, default=20)
+
+    try:
+        args = parser.parse_args(argv)
+        base_size = eval(args.base_size)
+        print(base_size)
+        utils.run("mkdir -p %s" % args.wrkdir)
+
+        subreads = args.reads if base_size <= 0 else args.subreads
+        if subreads == "":
+            subreads = os.path.join(args.wrkdir, "subreads_%d.fasta" % (base_size))
+
+        cmd = "~/work/fsa/build/bin/fsa_rd_tools random %s %s --base_size %d" % (args.reads, subreads, base_size)
+        utils.run_if_modified([args.reads], [subreads], cmd)
+
+        paf = os.path.join(args.wrkdir, "subreads_%d.paf" % (base_size))
+        cmd = "minimap2 -c --eqx -t %d %s %s > %s" % (args.threads, args.reference, subreads, paf)
+        utils.run_if_modified([subreads, args.reference], [paf], cmd)
+
+        result = os.path.join(args.wrkdir, "result_%d" % (base_size))
+        cmd = "python3 %s/paffile.py paf_accuracy %s > %s" % (mydir, paf, result)
+        utils.run_if_modified(paf, result, cmd)
+
+        utils.run("cat %s" % result)
+    except:
+        traceback.print_exc()
+        print("----------------")
+        print(parser.usage)
+
+
 if __name__ == '__main__':
-    if len(sys.argv) > 1:
-       locals()[sys.argv[1]](sys.argv[2:])
-    else:
-       for func in list(locals().keys()):
-           if func.startswith("rp_"):
-               print("%s: %s" % (func, locals()[func].__doc__.split("\n")[0]))
+    utils.script_entry(sys.argv, locals(), "rp_")

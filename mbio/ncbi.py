@@ -1,3 +1,4 @@
+#!/bin/env python3
 import sys, os
 import urllib.request, re
 import logging
@@ -186,6 +187,67 @@ def ncbi_download_bam(argv):
         traceback.print_exc()
         print("----------------")
         print(ncbi_download_baxh5.__doc__)
+
+def ncbi_compress_sralist(argv):
+    '''将连续的sra写成范围表示, 如1,3,4,5 -> 1,3-5.'''
+    
+    parser = argparse.ArgumentParser(ncbi_compress_sralist.__doc__)
+    parser.add_argument("list", type=str)
+    try:
+        args = parser.parse_args(argv)
+
+        sras = {}
+        pattern = re.compile("[a-zA-Z]*([0-9]*)")
+        for line in open(args.list):
+            sra = line.strip()
+            m = pattern.match(sra)
+            assert m != None
+            sras[int(m.group(1))] = sra
+        
+        ranges = []
+        for i in sorted(sras.keys()):
+            if len(ranges) == 0 or ranges[-1][1] + 1 < i :
+                ranges.append([i, i])
+            else:
+                ranges[-1][1] += 1
+
+        msg = []
+        for r in ranges:
+            if r[0] == r[1]:
+                msg.append(sras[r[0]])
+            elif r[0] + 1 == r[1]:
+                msg.append(sras[r[0]])
+                msg.append(sras[r[1]])
+            else:
+                msg.append("%s-%s" % (sras[r[0]],sras[r[1]]))
+        
+        print("\n".join(msg))
+        
+    except:
+        import traceback
+        traceback.print_exc()
+        print("----------------")
+        print(ncbi_compress_sralist.__doc__)
+
+def ncbi_script_download_fasta(argv):
+    '''生成下载fasta文件的脚本.'''
+    
+    parser = argparse.ArgumentParser(ncbi_script_download_fasta.__doc__)
+    parser.add_argument("list", type=str)
+    try:
+        args = parser.parse_args(argv)
+
+        pattern = 'wget -c "https://trace.ncbi.nlm.nih.gov/Traces/sra-reads-be/fasta?acc=%s" -O %s.fasta.gz'
+
+        for line in open(args.list):
+            sra = line.strip()
+            print(pattern % (sra, sra))
+        
+    except:
+        import traceback
+        traceback.print_exc()
+        print("----------------")
+        print(ncbi_script_download_fasta.__doc__)
 
 if __name__ == '__main__':
     if len(sys.argv) > 1:
