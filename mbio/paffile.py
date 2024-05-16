@@ -6,7 +6,8 @@ import multiprocessing
 import argparse
 
 
-import utils as utils
+import mbio.utils as utils
+
 CIGAR_PATTERN = re.compile(r"(\d+)([MIDNSHP=X])")
 
 def is_paf_ok(its, max_oh):
@@ -494,6 +495,12 @@ def paf_find_snp(argv):
         print("----------------")
         print(paf_find_snp.__doc__)
 
+
+
+_local_func = locals()
+def main():
+    utils.script_entry(sys.argv, _local_func, "paf_")
+
 if __name__ == '__main__':
-    utils.script_entry(sys.argv, locals(), "paf_")
+    main()
 
