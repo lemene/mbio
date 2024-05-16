@@ -17,7 +17,7 @@ def main():
     if cmd == "paf":
         from mbio.paffile import main
     elif cmd == "fx":
-        from mbio.fxtools import main
+        from mbio.fsa.fxbug import main
     else:
         pass
     sys.exit(main())
