@@ -960,6 +960,8 @@ def fx_crrsub(argv):
         logger.info("get sub reads by running %s" % cmd)
         run_cmd(cmd)
         
+        cmd = "grep -A1 %s sub.fasta > r.fasta" % read
+        run_cmd(cmd)
 
     except:
         traceback.print_exc()

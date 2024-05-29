@@ -1,6 +1,5 @@
 import sys,os
 
-
 from math import *
 
 def load_column(fname, col):
@@ -88,6 +87,29 @@ def tb_diff():
         traceback.print_exc()
         print(tb_intersect.__doc__)
        
+
+
+
+def sh_awk_mean():
+    '''统计某列的平均值
+    sh_awk_mean fname col
+'''
+
+    try:
+        fname = "" if sys.argv[2] == '-' else sys.argv[2]
+        col = int(sys.argv[3])
+
+        cmd = "awk 'BEGIN {n=0;s=0} {n+=1; s+=$%d;} END{print(s/n)}' %s" % (col+1, fname)
+        print(cmd)
+        os.system(cmd)
+
+    except:
+        traceback.print_exc()
+        print("----------------")
+        print(sh_awk_mean.__doc__);
+
+
+
 if __name__ == '__main__':
     if len(sys.argv) > 1:
        locals()[sys.argv[1]]()
