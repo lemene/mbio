@@ -1,6 +1,6 @@
 import os
 
-from mbio.logger import * 
+from mbio.utils.logger import * 
 
 def run_if_modified(ifiles, ofiles, cmd, force=False, reqsucc=True):
     '''如果ofiles修改时间落后ifiles，则运行func'''

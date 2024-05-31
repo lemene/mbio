@@ -4,6 +4,8 @@
 import sys, os
 import argparse
 
+import mbio.utils.utils as utils
+
 
 def iterate_maf_line(fname):
     s = [0, None, None]
@@ -238,13 +240,16 @@ def pbsim_test():
         print(pbsim_test.__doc__)
 
         
+
+
+_local_func = locals()
+def main():
+    utils.script_entry(sys.argv, _local_func, "pbsim_")
+
 if __name__ == '__main__':
-    if len(sys.argv) > 1:
-       locals()[sys.argv[1]]()
-    else:
-       for func in list(locals().keys()):
-           if func.startswith("pbsim_"):
-               print("%s: %s" % (func, locals()[func].__doc__.split("\n")[0]))
+    main()
+
+
 
 
 

@@ -9,7 +9,7 @@ import re
 import glob
 
 
-mydir = os.path.split(__file__)
+mydir,_ = os.path.split(__file__)
 sys.path.append(mydir)
 from mbio.fsa.misc import *
 import mbio.fsa.prjfile as prj
@@ -940,7 +940,7 @@ def fx_crrsub(argv):
         logger.info("read: %s", read)
 
         prjpath = prj.find_prjpath("1-correct", 5)
-        cmd = "grep -w -h %s %s/%d/*fasta.paf > ols.paf" % (read, prjpath, args.iteration)
+        cmd = "python3 %s/../../scripts/mbio.py mp_grep \"%s/%d/*fasta.paf\" %s --options \"-w -h\"   > ols.paf" % (mydir[0], prjpath, args.iteration, read)
         
         logger.info("get sub ols by running %s" % cmd)
         run_cmd(cmd)

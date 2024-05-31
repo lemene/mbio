@@ -9,8 +9,6 @@ root = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..")
 sys.path.insert(0, root)
 os.environ["PATH"] = root + os.pathsep + os.environ["PATH"]
 
-print(root)
-
 def main():
     cmd = sys.argv[1].split("_")[0]
 
@@ -18,6 +16,10 @@ def main():
         from mbio.paffile import main
     elif cmd == "fx":
         from mbio.fsa.fxbug import main
+    elif cmd == "mp":
+        from mbio.mproc import main
+    elif cmd == "rp":
+        from mbio.wrap.run_prog import main
     else:
         pass
     sys.exit(main())

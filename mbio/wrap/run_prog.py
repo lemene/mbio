@@ -9,16 +9,14 @@ import multiprocessing as mp
 from collections import defaultdict
 import logging
 
-import utils
-import logger
+import mbio.utils.utils as utils
+import mbio.utils.logger as logger
+tl = utils
 
 mydir, _ = os.path.split(__file__)
 
 prjdir = os.path.sep.join([os.path.dirname(os.path.abspath(__file__)), ".."])
 sys.path.append(prjdir)
-
-
-import utils as tl
 
 def rp_sam4igv(argv):
     '''将sam文件处理成igv可显示的格式, 生成xxx.sorted.bam xxx.sorted.bam.bai
@@ -35,7 +33,7 @@ def rp_sam4igv(argv):
         samfname = args.sam
         if args.filter:
             samfname = args.sam.replace(".sam", ".flt.sam")
-            cmd = "python3 %s/samfile.py sam_filter_overhang %s %s" % (mydir, args.sam, samfname)
+            cmd = "python3 %s/../samfile.py sam_filter_overhang %s %s" % (mydir, args.sam, samfname)
             tl.run_if_modified(args.sam, samfname, cmd)
 
 
@@ -343,5 +341,9 @@ def rp_eval_reads(argv):
         print(parser.usage)
 
 
+_local_func = locals()
+def main():
+    utils.script_entry(sys.argv, _local_func, "rp_")
+
 if __name__ == '__main__':
-    utils.script_entry(sys.argv, locals(), "rp_")
+    main()

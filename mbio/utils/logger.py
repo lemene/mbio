@@ -12,7 +12,7 @@ def init_logger():
     hfile.setFormatter(formatter)
     logger.addHandler(hfile)
 
-    hconsole = logging.StreamHandler(sys.stdout)
+    hconsole = logging.StreamHandler(sys.stderr)
     hconsole.setFormatter(formatter)
     logger.addHandler(hconsole)
     return logger
