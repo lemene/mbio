@@ -33,7 +33,7 @@ def rp_sam4igv(argv):
         samfname = args.sam
         if args.filter:
             samfname = args.sam.replace(".sam", ".flt.sam")
-            cmd = "python3 %s/../samfile.py sam_filter_overhang %s %s" % (mydir, args.sam, samfname)
+            cmd = "python3 %s/../ftype/samfile.py sam_filter_overhang %s %s" % (mydir, args.sam, samfname)
             tl.run_if_modified(args.sam, samfname, cmd)
 
 

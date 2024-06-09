@@ -911,8 +911,6 @@ def fx_eval_select(argv):
     try:
         args = parser.parse_args(argv)
 
-        results = {}
-
         logger.info("Loading bin infos from %s" % args.binfos)
         bininfos = {}
         for line in open(args.binfos):
@@ -928,6 +926,7 @@ def fx_eval_select(argv):
         SEL = 0
         
         fdetail = open(args.detail, "w")
+        count = [0, 0, 0, 0, 0, 0]
         import glob
         prev = "-1"
         prev_count = [TP, FP, FN, TN]
@@ -936,6 +935,7 @@ def fx_eval_select(argv):
             for line in open(fsel):
                 its = line.split()
                 a, b, score, select = int(its[0]), int(its[1]), float(its[2]), int(its[3])
+                count[select+1] += 1
                 if its[0] != prev:
                     fdetail.write("%s %d %d %d %d\n" % (prev, TP-prev_count[0], FP-prev_count[1], FN-prev_count[2], TN-prev_count[3]))
                     prev_count = [TP, FP, FN, TN]
@@ -946,6 +946,7 @@ def fx_eval_select(argv):
                 if select == 1: 
                     scores[a].append([score, j])
                     SEL += 1
+                    count[select+1+3] += 1
 
                 if select == 1 and j == 1:
                     TP += 1
@@ -971,7 +972,7 @@ def fx_eval_select(argv):
             for i in v:
                 wts[i[1]+1] += linear(i[0])
 
-
+        print("Count=(%d,%d,%d), Select=(%d, %d, %d)" % (count[0], count[1], count[2], count[3], count[4], count[5]))
         print("TP=%d, FP=%d, FN=%d, TN=%d" % (TP, FP, FN, TN))
         print("precision=%.02f recall=%.02f" % (TP/(TP+FP), (TP/(TP+FN))))
         print("Selected in all        : %.02f%%" % ((SEL / SUM) * 100))

@@ -13,13 +13,15 @@ def main():
     cmd = sys.argv[1].split("_")[0]
 
     if cmd == "paf":
-        from mbio.paffile import main
+        from mbio.ftype.paffile import main
     elif cmd == "fx":
         from mbio.fsa.fxbug import main
     elif cmd == "mp":
         from mbio.mproc import main
     elif cmd == "rp":
         from mbio.wrap.run_prog import main
+    elif cmd == "tb":
+        from mbio.ftype.table import main
     else:
         pass
     sys.exit(main())

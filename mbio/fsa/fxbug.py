@@ -969,6 +969,39 @@ def fx_crrsub(argv):
         parser.print_usage()
 
 
+def fx_align_read(argv):
+    parser = argparse.ArgumentParser("将相关读数比对到目标读数上")
+    parser.add_argument("read", type=str, default='')
+
+    try:
+        args = parser.parse_args(argv)
+        # get ols
+        import sys, os
+        import subprocess
+        import re
+
+        cmd = "grep -w %s *_tiles" % (args.read)
+        pattern = re.compile("edge=([0-9]+):[BE]~([0-9]+):[BE]")
+        proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, cwd=os.getcwd(),encoding="utf-8")
+        neighbour = []
+        for line in proc.stdout:
+            m = pattern.search(line)
+            if m != None:
+                print(m.group(1), m.group(2))
+                if len(neighbour) == 0 or neighbour[-1] != m.group(1):
+                    neighbour.append(m.group(1))
+                neighbour.append(m.group(2))
+
+
+        for i in neighbour:
+            cmd = "grep -w ^%s ../../1-correct/rdinfos" % i
+            os.system(cmd)
+
+
+    except:
+        traceback.print_exc()
+        print("-----------------")
+        parser.print_usage()
 
 
 def fx_adjacent_reads(argv):
@@ -1024,6 +1057,7 @@ def fx_grep_binfos(argv):
         print("-----------------")
         parser.print_usage()
 
+from mbio.fsa.fxtools import *
 
 local_funcs = locals()
 

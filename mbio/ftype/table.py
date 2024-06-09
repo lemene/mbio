@@ -1,6 +1,9 @@
 import sys,os
 
+import argparse
 from math import *
+
+import mbio.utils.utils as utils
 
 def load_column(fname, col):
     data = []
@@ -50,14 +53,22 @@ def load_col_items(fname, p):
         items.append(its[p])
     return items
 
-def tb_intersect():
+def tb_intersect(argv):
+    '''表的两列元素的交集'''
+    
+    parser = argparse.ArgumentParser(tb_intersect.__doc__)
+    parser.add_argument("table0", type=str)
+    parser.add_argument("table1", type=str)
+    parser.add_argument("--col0", type=int, default=0)
+    parser.add_argument("--col1", type=int, default=0)
     try:
+        args = parser.parse_args(argv)
         fname0 = sys.argv[2]
         fname1 = sys.argv[3]
 
 
-        items0 = set(load_col_items(fname0, 0))
-        items1 = set(load_col_items(fname1, 0))
+        items0 = set(load_col_items(args.table0, args.col0))
+        items1 = set(load_col_items(args.table1, args.col1))
 
 
         for i in items0 & items1:
@@ -69,7 +80,7 @@ def tb_intersect():
         print(tb_intersect.__doc__)
 
 
-def tb_diff():
+def tb_diff(argv):
     try:
         fname0 = sys.argv[2]
         fname1 = sys.argv[3]
@@ -110,10 +121,11 @@ def sh_awk_mean():
 
 
 
+_local_func = locals()
+def main():
+    utils.script_entry(sys.argv, _local_func, "tb_")
+
+
 if __name__ == '__main__':
-    if len(sys.argv) > 1:
-       locals()[sys.argv[1]]()
-    else:
-       for func in list(locals().keys()):
-           if func.startswith("tb_"):
-               print("%s: %s" % (func, locals()[func].__doc__.split("\n")[0]))
+    main()
+
