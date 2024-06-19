@@ -50,8 +50,7 @@ def open_file(fname):
         return gzip.open(fname, "rt") 
     else:
         return open(fname, "r")
-
-
+    
 def open_seq_file(fname, mode="r"):
     if fname[-6:] == ".fasta":
         return open(fname, mode), "fasta"

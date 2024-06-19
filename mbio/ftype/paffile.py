@@ -4,7 +4,7 @@ import sys,os
 import re
 import multiprocessing
 import argparse
-
+import traceback
 
 import mbio.utils.utils as utils
 
@@ -264,19 +264,26 @@ def paf_fsa_detail_accuracy():
         print(paf_fsa_detail_accuracy.__doc__)
 
 def paf_filter(argv):
+    '''过滤没有比对到端点的overlaps'''
+    
+    parser = argparse.ArgumentParser(paf_filter.__doc__)
+    parser.add_argument("paffile", type=str)
+    parser.add_argument("--overhang", type=int, default=500)
+    parser.add_argument("--identity", type=float, default=0.95)
     try:
-        ifname = argv[0]
-        oh = int (argv[1])
-        reads = {}
+        args = parser.parse_args(argv)
+
+        ifname = args.paffile
+        oh = args.overhang
         for line in open(ifname):
             its = line.split()
-            if is_paf_ok(its, oh):
+            if is_paf_ok(its, oh) and float(its[9]) / float(its[10]) >= args.identity:
                 print(line, end="")
             
     except:
-        import traceback
         traceback.print_exc()
-        print(paf_accuracy.__doc__)
+        print("-----------------")
+        parser.print_usage()
 
 def paf_readnames():
     '''获取overlaps的reads名称'''

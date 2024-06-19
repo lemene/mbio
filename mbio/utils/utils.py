@@ -31,6 +31,23 @@ def run(cmd, reqsucc=True):
 def newer(f0, f1):
     return not os.path.lexists(f1) or os.path.getmtime(f0) > os.path.getmtime(f1)
 
+
+def open_readable_file(fname):
+    if fname == "-":
+        return sys.stdin
+    elif fname.endswith(".gz"):
+        return gzip.open(fname, "rt") 
+    else:
+        return open(fname, "r")
+
+def open_writeable_file(fname):
+    if fname == "-":
+        return sys.stdout
+    elif fname.endswith(".gz"):
+        return gzip.open(fname, "wt") 
+    else:
+        return open(fname, "w")
+    
 def script_entry(argv, locals, prefix):
     
     if len(argv) > 1:

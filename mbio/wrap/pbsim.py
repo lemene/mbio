@@ -52,7 +52,7 @@ s S1_1      0 11554 +  11554 CTTCTTGC...
 
     return
 
-def pbsim_to_paf():
+def pbsim_to_paf(argv):
     '''将maf文件转成paf文件
        pbsim_to_paf maf-fname [paf-fname]
 '''
@@ -67,7 +67,7 @@ def pbsim_to_paf():
             its[0], its[1], its[2], its[3], its[4]  = read[1], read[5], read[2], read[3], read[4]
             m = ref.index('+')
             assert m != -1
-            its[5], its[6], its[7], its[8] = ref[1], ref[m+1], ref[m-2], ref[m-1]
+            its[5], its[6], its[7], its[8] = ref[1], ref[m+1], ref[m-2], str(int(ref[m-2]) + int(ref[m-1]))
 
             assert len(read[6]) == len(ref[m+2])
             its[9] = str(sum([1 for a, b in zip(read[6], ref[m+2]) if a == b]))
