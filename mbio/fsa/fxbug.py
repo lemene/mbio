@@ -1058,6 +1058,57 @@ def fx_grep_binfos(argv):
         parser.print_usage()
 
 from mbio.fsa.fxtools import *
+'''
+#!/bin/bash
+
+name=$1
+
+prj=../..
+
+grep -w -h $name $prj/2-align/*.paf  > sub.paf
+awk '{print $1}' sub.paf > names
+awk '{print $6}' sub.paf >> names
+~/work/fsa/build/bin/fsa_rd_tools sub $prj/1-correct/corrected_reads.fasta sub.fasta --names_fname names
+grep -A1 ">$name" sub.fasta > $name.fasta
+
+minimap2 -a  $name.fasta sub.fasta > $name.sam
+
+python3 ~/work/mbio/scripts/run_prog.py rp_sam4igv $name.sam  --filter 0
+'''
+def fx_read_snp(argv):
+    parser = argparse.ArgumentParser("check snp in read")
+    parser.add_argument("read", type=str, default='')
+    parser.add_argument("--fsa", type=str, default='~/work/fsa/')
+
+
+    try:
+        args = parser.parse_args(argv)
+        pafpath = prj.find_prjpath("2-align")
+        assert pafpath
+
+        from mbio.mproc import mp_grep
+        mp_grep()
+        cmd = "awk '{print $1}' sub.paf > names"
+        os.system(cmd)
+        cmd = "awk '{print $6}' sub.paf >> names"
+        os.system(cmd)
+
+        cmd = "%s/build/bin/fsa_rd_tools sub %s/1-correct/corrected_reads.fasta sub.fasta --names_fnamae names" % (args.fsa, pafpath + "../")
+        os.system(cmd)
+
+        cmd = 'grep -A1 -w ">%s" sub.fasta > %s.fasta' % (args.read, args.read)
+        os.system(cmd)
+
+        cmd = 'minimap2 -a  %s.fasta sub.fasta > %s.sam' % (args.read, args.read)
+        os.system(cmd)
+
+        cmd = "python3 ~/work/mbio/scripts/run_prog.py rp_sam4igv $name.sam  --filter 0" % (args.read)
+        os.system(cmd)
+
+    except:
+        traceback.print_exc()
+        print("-----------------")
+        parser.print_usage()
 
 local_funcs = locals()
 

@@ -1,6 +1,10 @@
 import os
 
-from mbio.utils.logger import * 
+from mbio.utils.logger import logger
+
+mydir, _ = os.path.split(__file__)
+
+prjdir = os.path.join("..", mydir)
 
 def run_if_modified(ifiles, ofiles, cmd, force=False, reqsucc=True):
     '''如果ofiles修改时间落后ifiles，则运行func'''

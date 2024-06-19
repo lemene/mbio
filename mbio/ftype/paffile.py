@@ -6,7 +6,7 @@ import multiprocessing
 import argparse
 
 
-import mbio.utils as utils
+import mbio.utils.utils as utils
 
 CIGAR_PATTERN = re.compile(r"(\d+)([MIDNSHP=X])")
 

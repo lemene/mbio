@@ -7,7 +7,7 @@ import argparse
 import matplotlib.pyplot as plt
 
 
-import utils as utils
+import mbio.utils.utils as utils
 
 
 def load_meryl_stat_file(fname):
@@ -45,11 +45,14 @@ def td_meryl_plot_frequency(argv):
         import traceback
         traceback.print_exc()
         print("----------------")
-        print(paf_find_snp.__doc__)
+        print(td_meryl_plot_frequency.__doc__)
 
 
 
 
+_local_func = locals()
+def main():
+    utils.script_entry(sys.argv, _local_func, "td_")
 
 if __name__ == '__main__':
-    utils.script_entry(sys.argv, locals(), "td_")
+    main()
