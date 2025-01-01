@@ -263,6 +263,27 @@ def paf_fsa_detail_accuracy():
         traceback.print_exc()
         print(paf_fsa_detail_accuracy.__doc__)
 
+def paf_filter_by_name(argv):
+    '''过滤读数名不在指定集合的overlaps'''
+    
+    parser = argparse.ArgumentParser(paf_filter.__doc__)
+    parser.add_argument("paffile", type=str)
+    parser.add_argument("names", type=str)
+    try:
+        args = parser.parse_args(argv)
+
+        names = set([line.strip() for line in open(args.names)])
+
+        for line in open(args.paffile):
+            its = line.split()
+            if its[0] in names or its[5] in names:
+                print(line, end="")
+            
+    except:
+        traceback.print_exc()
+        print("-----------------")
+        parser.print_usage()
+
 def paf_filter(argv):
     '''过滤没有比对到端点的overlaps'''
     

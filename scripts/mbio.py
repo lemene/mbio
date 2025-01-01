@@ -18,8 +18,9 @@ def main():
         "mp" : "mbio.mproc",
         "rp" : "mbio.wrap.run_prog",
         "tb" : "mbio.ftype.table",
-        "td" : "mbio.todo",
         'meryl': "mbio.wrap.meryl",
+        'quast': "mbio.wrap.quast",
+        'tmp' : "mbio.tmp"
     }
 
     cmd = sys.argv[1].split("_")[0]

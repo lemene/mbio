@@ -7,12 +7,14 @@ from collections import defaultdict
 import subprocess
 import re
 import glob
+from functools import partial
 
 
 mydir,_ = os.path.split(__file__)
 sys.path.append(mydir)
 from mbio.fsa.misc import *
 import mbio.fsa.prjfile as prj
+import mbio.utils.utils as utils
 
 
 def fx_sg2csv(argv):
@@ -264,18 +266,6 @@ def fx_snp_info(argv):
         parser.print_usage()
 
 
-def fx_getol(argv):
-    '''获取部分reads'''
-    try:
-        name = argv[0]
-        olfile = "../2-align/overlaps.paf"
-        cmd = """awk '{ if ($1==%s || $6==%s) { print $0 }}' %s > sub/%s.paf""" % (name, name, olfile, name)
-        print(cmd)
-        os.system(cmd)
-    except:
-        traceback.print_exc()
-        print("-----------------")
-        print(fx_getseq.__doc__)
 
 
 def get_contig_reads2(tile, id2name):
@@ -884,6 +874,97 @@ def fx_tile_breakpoint(argv):
         print("-----------------")
         parser.print_usage()
 
+# def cmp_ava_and_map():
+
+
+# import os, sys
+# prefix = sys.argv[1]
+# rd_2_ref = {}
+# for line in open("%s_sub_2_ref.paf" % prefix):
+#     its = line.split()
+#     if its[0] in rd_2_ref:
+#         if int(its[10]) > int(rd_2_ref[its[0]][10]):
+#             rd_2_ref[its[0]] = its
+
+#     else:
+#         rd_2_ref[its[0]] = its
+
+
+# def map_start(its):
+#     if its[4] == '+':
+#         return int(its[7]) - int(its[2])
+#     else:
+#         return int(its[8]) + int(its[2])
+
+
+# def load_paf(fname):
+#     ols = {}
+#     for line in open(fname):
+#         its = line.split()
+#         ids = (min(its[0], its[5]), max(its[0], its[5]))
+#         ols[ids] = its
+#     return ols
+
+# ols = load_paf("filter.paf")
+
+# ns = [line.strip() for line in open("%s_names" % prefix)]
+
+# pp = set()
+# for n0, n1 in zip(ns[0:-1], ns[1:]):
+#     its = ols[(min(n0, n1), max(n1, n0))]
+
+#     if its[0] in rd_2_ref and its[5] in rd_2_ref:
+#          offset0 = map_start(its)
+
+#          if rd_2_ref[its[5]][4] == '+':
+#              offset1 = map_start(rd_2_ref[its[0]]) - map_start(rd_2_ref[its[5]])
+#          else:
+#              offset1 = -(map_start(rd_2_ref[its[0]]) - map_start(rd_2_ref[its[5]]))
+
+#          if abs(offset1 - offset0) > 1000:
+#              cmd = "grep -w -n %s %s_names" % (its[0], prefix)
+#              os.system(cmd)
+#              print(offset0, offset1)
+#              print(its)
+#              print(rd_2_ref[its[0]])
+#      #         print(map_start(rd_2_ref[its[0]]))
+#              print(rd_2_ref[its[5]])
+#      #         print(map_start(rd_2_ref[its[5]]))
+
+
+def fx_check_tile(argv):
+    parser = argparse.ArgumentParser("检查contig的tile")
+    parser.add_argument("contig", type=str)
+    parser.add_argument("--tiles", type=str, default="primary_tiles")
+    parser.add_argument("--reference", type=str)
+
+    try:
+        args = parser.parse_args(argv)
+        print(utils.prjdir)
+        cmd = "%s/scripts/mbio.py fx_read_in_contig %s --contig %s > %s_names" % (utils.prjdir, args.tiles, args.contig, args.contig)
+        print(cmd)
+        os.system(cmd)
+        crr_path = prj.find_prjpath("1-correct")
+        cmd = "~/work/fsa/build/bin/fsa_rd_tools sub %s/corrected_reads.fasta %s_sub.fasta --names_fname %s_names" % \
+                (crr_path, args.contig, args.contig)
+        print(cmd)
+        os.system(cmd)
+        
+        ref = args.reference
+        if not ref:
+            ref = os.path.join(crr_path, "../../../data/ref.fna")
+        cmd = "minimap2 %s %s_sub.fasta -c --eqx > %s_sub_2_ref.paf -t 20" % \
+            (ref, args.contig, args.contig)
+        print(cmd)
+        os.system(cmd)
+
+    except:
+        traceback.print_exc()
+        print("-----------------")
+        parser.print_usage()
+
+    
+
 def fx_genome_size(argv):
     parser = argparse.ArgumentParser("根据组装生成reads信息估计基因组大小")
     parser.add_argument("readinfos", type=str)
@@ -922,6 +1003,7 @@ def fx_test(argv):
         traceback.print_exc()
         print("-----------------")
         parser.print_usage()
+
 
 def fx_crrsub(argv):
     parser = argparse.ArgumentParser("extract infos for debugging correction")
@@ -968,6 +1050,43 @@ def fx_crrsub(argv):
         print("-----------------")
         parser.print_usage()
 
+def get_ols(fname, names):
+    ols = []
+    for line in open(fname):
+        its = line.split()
+        if its[0] in names or its[5] in names:
+            ols.append(line)
+    return ols
+
+def fx_get_ols(argv):
+    parser = argparse.ArgumentParser("extract overlaps according names")
+    parser.add_argument("names", type=str, default='')
+    parser.add_argument("--paf", type=str, default="")
+    parser.add_argument("--threads", type=int, default=4)
+    parser.add_argument("--fsa", type=str, default="~/work/fsa/build/bin/")
+
+   
+    try:
+        args = parser.parse_args(argv)
+        # get ols
+
+        if len(args.paf) == 0:
+            prjpath = prj.find_prjpath("1-correct", 5)
+            args.paf = prjpath + "/0/cc*.paf"
+
+        
+        names = set([line.strip() for line in open(args.names)])
+
+        with mp.Pool(args.threads) as pool:
+            result = pool.map(partial(get_ols, names=names), glob.glob(args.paf))
+            for res in result:
+                for ol in res:
+                    print(ol, end="")     
+
+    except:
+        traceback.print_exc()
+        print("-----------------")
+        parser.print_usage()
 
 def fx_align_read(argv):
     parser = argparse.ArgumentParser("将相关读数比对到目标读数上")
