@@ -5,6 +5,7 @@ import sys, os
 import traceback
 import argparse
 from collections import defaultdict
+import glob
 
 import mbio.utils.utils as utils
 
@@ -17,22 +18,57 @@ def quast_get_misassembly(argv):
         args = parser.parse_args(argv)
         all_mis = []
 
-        types = set(["relocation", "local misassembly", "inversion", "translocation"])
-        mis = [None]*4
-        for i, line in enumerate(open(f"{args.qwrkdir}/contigs_reports/all_alignments_simu_asm.tsv")):
-            if i == 0: continue
+        tsvfname = glob.glob(f"{args.qwrkdir}/contigs_reports/all_alignments_*.tsv")[0]
 
-            if i % 2 == 1:
+        pairs = []
+        for lineno, line in enumerate(open(tsvfname)):
+            if lineno == 0: continue
+
+            if line.startswith("CONTIG"):
                 its = line.split()
-                mis[0] = its[5]
-                mis[1] = int(its[1])
-                mis[2] = int(its[3])
+                ctg_name, ctg_len = its[1], int(its[2])
+                
+                if len(pairs) == 0: continue
 
+                if len(pairs[-1].split()) <= 6:
+                    pairs.pop()
+                assert len(pairs) % 2 == 1
+
+                for i, p in enumerate(pairs):
+                    if i % 2 == 0:
+                        p = p.split()
+                        assert p[5] == its[1] 
+                        assert int(p[2]) >= 1 and int(p[2]) <= ctg_len 
+                        assert int(p[3]) >= 1 and int(p[3]) <= ctg_len 
+                
+                pp = pairs[0].split()
+                s = min( int(pp[2]), int(pp[3]))
+                if s >= 1000:
+                    all_mis.append((pp[5], 1, s, "translocation"))
+
+
+                for j in range(0, len(pairs)-2):
+                    
+                    type = pairs[j+1].split(',')[0]
+                    if type in set(["relocation", "local misassembly", "inversion", "translocation"]):
+                        its0 = pairs[j].split()
+                        its2 = pairs[j+2].split()
+                        assert its0[5] == its2[5]
+                        s0, e0 = int(its0[2]), int(its0[3])
+                        s2, e2 = int(its2[2]), int(its2[3])
+                        pos = sorted((s0, e0, s2, e2))
+                        all_mis.append((its0[5], pos[1], pos[2], type))
+
+                pp = pairs[-1].split()
+                e = max( int(pp[2]), int(pp[3]))
+                if ctg_len -e >= 1000:
+                    all_mis.append((pp[5], e, ctg_len, "translocation"))
+
+                pairs = []
             else:
-                mis[3] = line.strip().split(',')[0]
-                if mis[3] in types:
-                    all_mis.append(mis) 
-                mis = [None]*4
+                pairs.append(line.strip())
+
+        all_mis.sort()
 
         for mis in all_mis:
             print("%s %d %d \"%s\"" % (mis[0],mis[1], mis[2], mis[3]))

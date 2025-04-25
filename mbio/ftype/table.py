@@ -197,6 +197,34 @@ def tb_sort(argv):
         parser.print_usage()
 
 
+def tb_rename_col(argv):
+    '''重命名表的某一列'''
+    parser = argparse.ArgumentParser(tb_rename_col.__doc__)
+    parser.add_argument("i2n", type=str)
+    parser.add_argument("fname", type=str)
+    parser.add_argument("--col", type=int, default=0)
+    try:
+        args = parser.parse_args(argv)
+
+        def load_id2name(fname):
+            n2i = {}
+            for line in gzip.open(fname, "rt"):
+                its = line.split()
+                n2i[its[1]] = its[0]
+            return n2i
+
+        n2i = load_id2name(argv.i2n)
+
+        for line in open(argv.fname):
+            its = line.split()
+            its[argv.col] = n2i[its[argv.col]]
+            print(" ".join(its))
+
+    except:
+        traceback.print_exc()
+        print("-----------------")
+        parser.print_usage()
+
 _local_func = locals()
 def main():
     utils.script_entry(sys.argv, _local_func, "tb_")

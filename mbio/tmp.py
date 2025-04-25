@@ -6,7 +6,6 @@ import sys, os
 import traceback
 import argparse
 import math
-import matplotlib.pyplot as plt
 
 prjdir = os.path.sep.join([os.path.dirname(os.path.abspath(__file__)), ".."])
 sys.path.append(prjdir)
@@ -111,6 +110,8 @@ def calc_density(bins):
 
 
 def tmp_group_infos(argv):
+    
+    import matplotlib.pyplot as plt
     parser = argparse.ArgumentParser(tmp_count_kmer.__doc__)
     parser.add_argument("infos", type=str)
     try:
@@ -205,7 +206,10 @@ def tmp_filter_paf(argv):
 def tmp_detail(argv):
     parser = argparse.ArgumentParser(tmp_count_kmer.__doc__)
     parser.add_argument("detail", type=str)
-    parser.add_argument("read", type=str)
+    parser.add_argument("--read", type=str)
+    parser.add_argument("--bed", type=str, default="")
+    parser.add_argument("--olsize", type=int, default=5000)
+    
     try:
         best_map = {}
 
@@ -217,11 +221,52 @@ def tmp_detail(argv):
             best_map[its[0]] = (c, int(s), int(e))
 
 
-        assert args.read in best_map
-        ctg, start, end = best_map[args.read]
+        if args.bed:
+            ctg, rr = args.bed.split(":")
+            [start, end] = [int(r) for r in rr.split("-")]
+        else:
+            assert args.read in best_map
+            ctg, start, end = best_map[args.read]
         for rd, (c, s, e) in best_map.items():
-            if ctg == c and e >= start and s <= end:
-                print(rd)
+            if ctg == c and e >= start and s <= end and min(e, end) - max(s, start) >= args.olsize:
+                print(rd, min(e, end) - max(s, start))
+    except:
+        traceback.print_exc()
+
+def tmp_cmp_detail(argv):
+    '''比较两个fsa_ol_tools accuracy 生成的detail文件'''
+    parser = argparse.ArgumentParser(tmp_cmp_detail.__doc__)
+    parser.add_argument("detail0", type=str)
+    parser.add_argument("detail1", type=str)
+    try:
+        args = parser.parse_args(argv)
+
+        def load_detail(fname):
+            infos = {}
+            for line in open(fname):
+                its = line.split()
+                infos[its[0]] = its
+
+            return infos
+
+        detail0 = load_detail(args.detail0)
+        detail1 = load_detail(args.detail1)
+
+        diff = []
+        for k, v in detail0.items():
+            if k not in detail1:
+                #diff.append([0, v])
+                pass
+            else:
+                v1 = detail1[k]
+                diff.append([(float(v[8]) - float(v1[8])), v, v1])
+
+        diff.sort(key=lambda x: -x[0])
+
+        for i in diff:
+            print(i)
+
+
     except:
         traceback.print_exc()
 

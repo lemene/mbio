@@ -932,37 +932,6 @@ def fx_tile_breakpoint(argv):
 #      #         print(map_start(rd_2_ref[its[5]]))
 
 
-def fx_check_tile(argv):
-    parser = argparse.ArgumentParser("检查contig的tile")
-    parser.add_argument("contig", type=str)
-    parser.add_argument("--tiles", type=str, default="primary_tiles")
-    parser.add_argument("--reference", type=str)
-
-    try:
-        args = parser.parse_args(argv)
-        print(utils.prjdir)
-        cmd = "%s/scripts/mbio.py fx_read_in_contig %s --contig %s > %s_names" % (utils.prjdir, args.tiles, args.contig, args.contig)
-        print(cmd)
-        os.system(cmd)
-        crr_path = prj.find_prjpath("1-correct")
-        cmd = "~/work/fsa/build/bin/fsa_rd_tools sub %s/corrected_reads.fasta %s_sub.fasta --names_fname %s_names" % \
-                (crr_path, args.contig, args.contig)
-        print(cmd)
-        os.system(cmd)
-        
-        ref = args.reference
-        if not ref:
-            ref = os.path.join(crr_path, "../../../data/ref.fna")
-        cmd = "minimap2 %s %s_sub.fasta -c --eqx > %s_sub_2_ref.paf -t 20" % \
-            (ref, args.contig, args.contig)
-        print(cmd)
-        os.system(cmd)
-
-    except:
-        traceback.print_exc()
-        print("-----------------")
-        parser.print_usage()
-
     
 
 def fx_genome_size(argv):
@@ -1227,6 +1196,48 @@ def fx_read_snp(argv):
     except:
         traceback.print_exc()
         print("-----------------")
+        parser.print_usage()
+
+def fx_check_contig_tile(argv):
+    "根据read在参考基因组的位置，检查contig的tile是否和参考基因组一致"
+    parser = argparse.ArgumentParser(fx_check_contig_tile.__doc__)
+    parser.add_argument("contig", type=str)
+    parser.add_argument("read", type=str, default='')
+    parser.add_argument("--tiles", type=str, default="primary_tiles")
+    parser.add_argument("--reference", type=str, default="../../../data/ref.fna")
+    parser.add_argument("--fsa", type=str, default='~/work/fsa/')
+
+    try:
+        args = parser.parse_args(argv)
+        print(utils.prjdir)
+        cmd = "%s/scripts/mbio.py fx_read_in_contig %s --contig %s > %s_names" % (utils.prjdir, args.tiles, args.contig, args.contig)
+        print(cmd)
+        os.system(cmd)
+
+        crr_path = prj.find_prjpath("1-correct")
+        cmd = "~/work/fsa/build/bin/fsa_rd_tools sub %s/corrected_reads.fasta %s_sub.fasta --names_fname %s_names" % \
+                (crr_path, args.contig, args.contig)
+        print(cmd)
+        os.system(cmd)
+        
+        cmd = "minimap2 %s %s_sub.fasta -c --eqx --secondary=no> %s_sub_2_ref.paf -t 20" % \
+            (args.reference, args.contig, args.contig)
+        print(cmd)
+        os.system(cmd)
+
+        cmd = f"{utils.prjdir}/scripts/mbio.py tmp_position_in_reference {args.contig}_sub_2_ref.paf > {args.contig}_sub_position"
+        print(cmd)
+        os.system(cmd)
+
+        cmd = f"{utils.prjdir}/scripts/mbio.py tmp_position_in_reference {args.contig}_sub_2_ref.paf > {args.contig}_sub_position"
+        print(cmd)
+        os.system(cmd)
+        cmd = f"{utils.prjdir}/scripts/mbio.py tmp_check_overlap filter.paf {args.contig}_sub_position --tile {args.tiles} > {args.contig}_check_tiles"
+        print(cmd)
+        os.system(cmd)
+    except:
+        traceback.print_exc()
+        print("-------------")
         parser.print_usage()
 
 local_funcs = locals()
